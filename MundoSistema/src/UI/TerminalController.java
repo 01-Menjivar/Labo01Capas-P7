@@ -1,6 +1,7 @@
 package UI;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -217,23 +218,37 @@ public class TerminalController {
         System.out.print("Apellido: ");
         String surname = scanner.nextLine();
 
-        System.out.print("DUI: ");
-        String dui = scanner.nextLine();
-
+        //Se recibe la fecha de nacimientto para calcular la edad
         LocalDate dateOfBirth = readDate("Fecha de nacimiento (yyyy-MM-dd): ");
         if (dateOfBirth == null) return;
 
-        //Se agrega el paciente a la lista
+        //Se calcula edad
+        int age = calculateAge(dateOfBirth);
+
+        //Se determina el DUI
+        String dui;
+        if (age < 18) {
+            dui = "00000000-0"; // Se asigna el DUI para menores
+            System.out.println("Nota: Se asignó el DUI predeterminado 00000000-0 por ser menor de edad.");
+        } else {
+            System.out.print("DUI: ");
+            dui = scanner.nextLine();
+        }
+
+        // Add patient to the system
         try {
             Patient patient = patientService.createPatient(name, surname, dui, dateOfBirth);
             System.out.println("Paciente agregado exitosamente!");
-            if (patient.getDUI().equals("00000000-0")) {
-                System.out.println("Nota: Se asignó el DUI predeterminado 00000000-0 por ser menor de edad.");
-            }
         } catch (IllegalArgumentException e) {
             System.out.println("Error: " + e.getMessage());
         }
     }
+
+    // Function to calculate age from date of birth
+    private int calculateAge(LocalDate birthDate) {
+        return Period.between(birthDate, LocalDate.now()).getYears();
+    }
+
 
     //Funcion para agregar un doctor a la lista
     private void addDoctor() {
