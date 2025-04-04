@@ -16,9 +16,6 @@ public class Doctor extends Person {
     }
 
     public void setCode(String code) {
-        if (!code.matches("ZNH-\\d[A-Za-z]\\d-MD-[A-Za-z]\\d")) {
-            throw new IllegalArgumentException("Invalid doctor code format. Must be ZNH-XAX-MD-AX");
-        }
         this.code = code;
     }
 

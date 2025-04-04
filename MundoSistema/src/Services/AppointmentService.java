@@ -25,7 +25,6 @@ public class AppointmentService {
         this.patientService = patientService;
     }
 
-    //
     public Appointment createAppointment(Patient patient, Doctor doctor, LocalDate date, String specialty)
             throws IllegalStateException {
         LocalTime time;
@@ -90,6 +89,9 @@ public class AppointmentService {
         return appointmentRepository.findAllSorted();
     }
 
+    //Obtiene todas las citas
+
+
     //Filtra citas por código del doctor
     public List<Appointment> getAppointmentsByDoctorCode(String doctorCode) {
         return appointmentRepository.findByDoctorCode(doctorCode);
@@ -105,32 +107,4 @@ public class AppointmentService {
         appointment.setAttendance(attended);
     }
 
-    public AppointmentDTO convertToDTO(Appointment appointment) {
-        return new AppointmentDTO(
-                appointment.getPatient().getName(),
-                appointment.getPatient().getSurname(),
-                appointment.getPatient().getDUI(),
-                appointment.getDoctor().getName(),
-                appointment.getDoctor().getSurname(),
-                appointment.getDoctor().getCode(),
-                appointment.getDate(),
-                appointment.getTime(),
-                appointment.getSpecialty(),
-                appointment.isAttendance()
-        );
-    }
-
-    public AppointmentDetailDTO convertToDetailDTO(Appointment appointment) {
-        PatientDTO patientDTO = patientService.convertToDTO(appointment.getPatient());
-        DoctorDTO doctorDTO = doctorService.convertToDTO(appointment.getDoctor());
-
-        return new AppointmentDetailDTO(
-                patientDTO,
-                doctorDTO,
-                appointment.getDate(),
-                appointment.getTime(),
-                appointment.getSpecialty(),
-                appointment.isAttendance()
-        );
-    }
 }
