@@ -87,7 +87,7 @@ public class TerminalController {
         System.out.println("3. Agendar nueva cita");
         System.out.println("4. Agregar nuevo paciente");
         System.out.println("5. Agregar nuevo doctor");
-        System.out.println("5. Ver listado de doctores");
+        System.out.println("6. Ver listado de doctores");
         System.out.println("7. Buscar citas por código de doctor");
         System.out.println("8. Cancelar una cita");
         System.out.println("9. Mundo salva vidas");
