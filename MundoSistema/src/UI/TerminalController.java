@@ -222,20 +222,22 @@ public class TerminalController {
         LocalDate dateOfBirth = readDate("Fecha de nacimiento (yyyy-MM-dd): ");
         if (dateOfBirth == null) return;
 
-        //Se calcula edad
+        //Se obtiene la edad del paciente
         int age = calculateAge(dateOfBirth);
 
         //Se determina el DUI
         String dui;
         if (age < 18) {
-            dui = "00000000-0"; // Se asigna el DUI para menores
+            //Se asigna el DUI para menores
+            dui = "00000000-0";
             System.out.println("Nota: Se asignó el DUI predeterminado 00000000-0 por ser menor de edad.");
         } else {
+            //Se registra el DUI si es mayor de edad
             System.out.print("DUI: ");
             dui = scanner.nextLine();
         }
 
-        // Add patient to the system
+        //Se agrega el paciente a las lista
         try {
             Patient patient = patientService.createPatient(name, surname, dui, dateOfBirth);
             System.out.println("Paciente agregado exitosamente!");
@@ -244,7 +246,7 @@ public class TerminalController {
         }
     }
 
-    // Function to calculate age from date of birth
+    //Se calcula la edad usando la fecha de nacimiento
     private int calculateAge(LocalDate birthDate) {
         return Period.between(birthDate, LocalDate.now()).getYears();
     }
