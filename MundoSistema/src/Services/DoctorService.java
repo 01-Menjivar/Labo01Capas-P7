@@ -35,20 +35,13 @@ public class DoctorService {
     public String generateDoctorCode() {
         Random random = new Random();
         StringBuilder code = new StringBuilder("ZNH-");
-
         code.append(random.nextInt(10))
-                .append((char) ('A' + random.nextInt(26)))
-                .append(random.nextInt(10));
-
+                .append((char) ('A' + random.nextInt(26)));
         code.append("-MD-");
-
-        code.append((char) ('A' + random.nextInt(26)))
-                .append(random.nextInt(10));
-
+        code.append((char) ('A' + random.nextInt(26)));
+        code.append("!");
         return code.toString();
     }
-
-    //Funciones adicionales
 
     //Recuperar todos los doctores
     public List<Doctor> getAllDoctors() {

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -43,22 +44,28 @@ public class TerminalController {
                     listAppointments();
                     break;
                 case 2:
-                    scheduleAppointment();
+                    markAppointmentAttendance();
                     break;
                 case 3:
-                    addPatient();
+                    scheduleAppointment();
                     break;
                 case 4:
-                    addDoctor();
+                    addPatient();
                     break;
                 case 5:
-                    searchAppointmentsByDoctorCode();
+                    addDoctor();
                     break;
                 case 6:
-                    cancelAppointment();
+                    listDoctors();
                     break;
                 case 7:
-                    mundoSlavaVidas();
+                    searchAppointmentsByDoctorCode();
+                    break;
+                case 8:
+                    cancelAppointment();
+                    break;
+                case 9:
+                    mundoSalvaVidas();
                     break;
                 case 0:
                     exit = true;
@@ -74,14 +81,16 @@ public class TerminalController {
 
     //Prints para mostrar el menu en la consola
     private void displayMenu() {
-        System.out.println("\n===== HOSPITAL NACIONAL DE ZAUN - SISTEMA DE CITAS =====");
+        System.out.println("\n===== HOSPITAL ====== SISTEMA DE CITAS =====");
         System.out.println("1. Ver listado de citas");
-        System.out.println("2. Agendar nueva cita");
-        System.out.println("3. Agregar nuevo paciente");
-        System.out.println("4. Agregar nuevo doctor");
-        System.out.println("5. Buscar citas por código de doctor");
-        System.out.println("6. Cancelar una cita");
-        System.out.println("7. Mundo salva vidas");
+        System.out.println("2. Marcar asistencia de citas");
+        System.out.println("3. Agendar nueva cita");
+        System.out.println("4. Agregar nuevo paciente");
+        System.out.println("5. Agregar nuevo doctor");
+        System.out.println("5. Ver listado de doctores");
+        System.out.println("7. Buscar citas por código de doctor");
+        System.out.println("8. Cancelar una cita");
+        System.out.println("9. Mundo salva vidas");
         System.out.println("0. Salir");
         System.out.print("Seleccione una opción: ");
     }
@@ -107,20 +116,95 @@ public class TerminalController {
 
         //Muestra el listado de citas
         System.out.println("\n===== LISTADO DE CITAS =====");
-        System.out.printf("%-12s %-20s %-30s %-30s%n",
-                "FECHA", "ESPECIALIDAD", "DOCTOR", "PACIENTE");
-        System.out.println("--------------------------------------------------------------");
+        System.out.printf("%-12s %-20s %-25s %-25s %-10s%n",
+                "FECHA", "ESPECIALIDAD", "DOCTOR", "PACIENTE", "ASISTENCIA");
+        System.out.println("-----------------------------------------------------------------------------------------");
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         for (Appointment appointment : appointments) {
-            System.out.printf("%-12s %-20s %-30s %-30s%n",
+            // Determinar el estado de asistencia para mostrar
+            String attendanceStatus;
+            if (appointment.getDate().isAfter(LocalDate.now())) {
+                attendanceStatus = "Pendiente";
+            } else {
+                attendanceStatus = appointment.isAttendance() ? "Asistió" : "No asistió";
+            }
+
+            System.out.printf("%-12s %-20s %-25s %-25s %-10s%n",
                     appointment.getDate().format(dateFormatter) + " " + appointment.getTime(),
                     appointment.getSpecialty(),
                     appointment.getDoctor().getName() + " " + appointment.getDoctor().getSurname(),
-                    appointment.getPatient().getName() + " " + appointment.getPatient().getSurname());
+                    appointment.getPatient().getName() + " " + appointment.getPatient().getSurname(),
+                    attendanceStatus);
         }
     }
+
+    private void markAppointmentAttendance() {
+        System.out.println("\n===== MARCAR ASISTENCIA A CITA =====");
+
+        // Obtener todas las citas
+        List<Appointment> appointments = appointmentService.getAllAppointmentsSorted();
+
+        if (appointments.isEmpty()) {
+            System.out.println("No hay citas registradas en el sistema.");
+            return;
+        }
+
+        // Mostrar solo las citas de hoy y pasadas que no han sido marcadas
+        List<Appointment> relevantAppointments = new ArrayList<>();
+        int index = 1;
+
+        System.out.println("CITAS DISPONIBLES PARA MARCAR ASISTENCIA:");
+        System.out.printf("%-5s %-12s %-20s %-25s %-25s%n",
+                "ID", "FECHA", "ESPECIALIDAD", "DOCTOR", "PACIENTE");
+        System.out.println("-------------------------------------------------------------------------------");
+
+        for (Appointment appointment : appointments) {
+            // Mostrar solo citas de hoy o pasadas
+            if (!appointment.getDate().isAfter(LocalDate.now())) {
+                System.out.printf("%-5d %-12s %-20s %-25s %-25s%n",
+                        index,
+                        appointment.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " " + appointment.getTime(),
+                        appointment.getSpecialty(),
+                        appointment.getDoctor().getName() + " " + appointment.getDoctor().getSurname(),
+                        appointment.getPatient().getName() + " " + appointment.getPatient().getSurname());
+
+                relevantAppointments.add(appointment);
+                index++;
+            }
+        }
+
+        if (relevantAppointments.isEmpty()) {
+            System.out.println("No hay citas disponibles para marcar asistencia.");
+            return;
+        }
+
+        System.out.print("\nSeleccione el ID de la cita para marcar asistencia (0 para cancelar): ");
+        int selectedId;
+        try {
+            selectedId = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida. Operación cancelada.");
+            return;
+        }
+
+        if (selectedId == 0 || selectedId > relevantAppointments.size()) {
+            System.out.println("Operación cancelada.");
+            return;
+        }
+
+        Appointment selectedAppointment = relevantAppointments.get(selectedId - 1);
+
+        System.out.print("¿El paciente asistió a la cita? (S/N): ");
+        String response = scanner.nextLine().trim().toUpperCase();
+
+        boolean attended = response.equals("S") || response.equals("SI") || response.equals("SÍ");
+        appointmentService.markAttendance(selectedAppointment, attended);
+
+        System.out.println("Estado de asistencia actualizado correctamente.");
+    }
+
 
     //Funcion para agregar una cita
     private void scheduleAppointment() {
@@ -145,7 +229,7 @@ public class TerminalController {
         if (doctor == null) return;
 
         // Fecha de la cita
-        LocalDate appointmentDate = readDate("Ingrese la fecha de la cita (yyyy-MM-dd): ");
+        LocalDate appointmentDate = readDate("Ingrese la fecha de la cita (AAAA-MM-DD): ");
         if (appointmentDate == null) return;
 
         try {
@@ -187,6 +271,30 @@ public class TerminalController {
         return patients.get(selection - 1);
     }
 
+    //Función para listar los doctores
+    private void listDoctors() {
+        System.out.println("\n===== LISTADO DE DOCTORES =====");
+
+        List<Doctor> doctors = doctorService.getAllDoctors();
+
+        if (doctors.isEmpty()) {
+            System.out.println("No hay doctores registrados en el sistema.");
+            return;
+        }
+
+        System.out.println("CÓDIGO\t\tNOMBRE\t\tAPELLIDO\t\tESPECIALIDAD");
+        System.out.println("--------------------------------------------------");
+
+        for (Doctor doctor : doctors) {
+            System.out.printf("%-10s\t%-15s\t%-15s\t%-15s\n",
+                    doctor.getCode(),
+                    doctor.getName(),
+                    doctor.getSurname(),
+                    doctor.getSpecialty());
+        }
+        System.out.println("\nTotal de doctores: " + doctors.size());
+    }
+
     //Funcion auxiliar para elegir un doctor - Funciona igual que la de paciente
     private Doctor selectDoctor(List<Doctor> doctors) {
         System.out.println("Doctores disponibles:");
@@ -219,7 +327,7 @@ public class TerminalController {
         String surname = scanner.nextLine();
 
         //Se recibe la fecha de nacimientto para calcular la edad
-        LocalDate dateOfBirth = readDate("Fecha de nacimiento (yyyy-MM-dd): ");
+        LocalDate dateOfBirth = readDate("Fecha de nacimiento (AAAA-MM-DD): ");
         if (dateOfBirth == null) return;
 
         //Se obtiene la edad del paciente
@@ -239,6 +347,7 @@ public class TerminalController {
 
         //Se agrega el paciente a las lista
         try {
+            // ESTA ES LA LÍNEA QUE FALTA: Llamar al servicio para crear el paciente
             Patient patient = patientService.createPatient(name, surname, dui, dateOfBirth);
             System.out.println("Paciente agregado exitosamente!");
         } catch (IllegalArgumentException e) {
@@ -266,7 +375,7 @@ public class TerminalController {
         System.out.print("DUI: ");
         String dui = scanner.nextLine();
 
-        LocalDate dateOfBirth = readDate("Fecha de nacimiento (yyyy-MM-dd): ");
+        LocalDate dateOfBirth = readDate("Fecha de nacimiento (AAAA-MM-DD): ");
         if (dateOfBirth == null) return;
 
         System.out.print("Especialidad: ");
@@ -362,7 +471,7 @@ public class TerminalController {
     }
 
     //El boton de Dr. Mundo que no hace nada XD
-    private void mundoSlavaVidas() {
+    private void mundoSalvaVidas() {
         System.out.println("Dr. Mundo es el mejor Top laner");
     }
 
